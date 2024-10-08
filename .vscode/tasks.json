@@ -8,6 +8,7 @@
                 "-fdiagnostics-color=always",
                 "-g",
                 "${file}",
+                "glad.o",
                 "-o",
                 "${fileDirname}\\${fileBasenameNoExtension}.exe",
                 "-L\"${fileDirname}\"",
