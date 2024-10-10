@@ -146,7 +146,6 @@ int main() {
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window)) {
-        glfwPollEvents();
         /* Render here */
         glClearColor(1, 1, 1, 1);
         glClear(GL_COLOR_BUFFER_BIT);

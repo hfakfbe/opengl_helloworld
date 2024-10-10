@@ -8,6 +8,7 @@
                 "-fdiagnostics-color=always",
                 "-g",
                 "${file}",
+                "shader.cpp",
                 "glad.o",
                 "-o",
                 "${fileDirname}\\${fileBasenameNoExtension}.exe",
