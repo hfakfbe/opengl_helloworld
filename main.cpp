@@ -130,6 +130,7 @@ int main()
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glDrawArrays(GL_TRIANGLES, 2, 3);
+        
         glBindVertexArray(0);
 
         processInput(window);
