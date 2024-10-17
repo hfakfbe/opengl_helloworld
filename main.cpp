@@ -46,12 +46,12 @@ int main()
     // draw
     // data
     float vertices[] = {
-    // position           color            texture coordination
-        0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,  // 右上角
-        0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, // 右下角
-        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, // 左下角
-        -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 左上角
-        -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f
+    //  position            color               texture coordination
+        0.5f, 0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 0.0f,  // 右上角
+        0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   1.0f, 1.0f, // 右下角
+        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f,   0.0f, 1.0f, // 左下角
+        -0.5f, 0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   0.0f, 0.0f, // 左上角
+        -1.0f, 0.0f, 0.0f,  0.0f, 1.0f, 0.0f,   0.0f, 0.0f
     };
     unsigned int indices[] = {
         0, 1, 3, // 第一个三角形
@@ -94,16 +94,31 @@ int main()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     // load and generate
-    int width, height, nrChannels;
-    unsigned char *data = stbi_load("container.jpg", &width, &height, &nrChannels, 0);
+    int imwidth, imheight, nrChannels;
+    unsigned char *data = stbi_load("container.jpg", &imwidth, &imheight, &nrChannels, 0);
     if(data){
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imwidth, imheight, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
     }else{
         std::cout << "Fail to load image!\n";
     }
     stbi_image_free(data);
 
+    glm::mat4 model(1.0f);
+    model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    glm::mat4 view(1.0f);
+    // 注意，我们将矩阵向我们要进行移动场景的反方向移动。
+    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+    glm::mat4 projection(1.0f);
+    int width, height;
+    glfwGetFramebufferSize(window, &width, &height);
+    projection = glm::perspective(glm::radians(45.0f), (float) width / height, 0.1f, 100.0f);
+    for(int i = 0; i < 4; i ++){
+        for(int j = 0; j < 4; j ++){
+            std::cout << projection[i][j] << " ";
+        }
+        std::cout << "\n";
+    }
 
     while(!glfwWindowShouldClose(window)){
         glClearColor(0.2, 0.3, 0.3, 1.0);
@@ -120,6 +135,14 @@ int main()
         trans = glm::rotate(trans, (float) glfwGetTime(), glm::vec3(0.0f, 1.0f, 1.0f));
         unsigned int transformLoc = glGetUniformLocation(ourShader.ID, "transform");
         glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+
+        // world
+        int modelLoc = glGetUniformLocation(ourShader.ID, "model");
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        int viewLoc = glGetUniformLocation(ourShader.ID, "view");
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+        int projectionLoc = glGetUniformLocation(ourShader.ID, "projection");
+        glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
         glBindVertexArray(VAO);
         
