@@ -1,6 +1,7 @@
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 #include "shader.h"
+#include "stb_image.h"
 
 #include <iostream>
 #include <cmath>
@@ -42,11 +43,12 @@ int main()
     // draw
     // data
     float vertices[] = {
-        0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f,   // 右上角
-        0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,  // 右下角
-        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, // 左下角
-        -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f,  // 左上角
-        -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f
+    // position           color            texture coordination
+        0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,  // 右上角
+        0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, // 右下角
+        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, // 左下角
+        -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 左上角
+        -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f
     };
     unsigned int indices[] = {
         0, 1, 3, // 第一个三角形
@@ -68,15 +70,36 @@ int main()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
     // set a vertex
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *) 0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *) 0); // pos
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *) (3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *) (3 * sizeof(float))); // color
     glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *) (6 * sizeof(float))); // texture
+    glEnableVertexAttribArray(2);
 
     // int nrAttributes;
     // glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &nrAttributes);
     // std::cout << "Maximum nr of vertex attributes supported: " << nrAttributes << std::endl;
-
+    
+    // texture
+    unsigned int texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    // set texture
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // load and generate
+    int width, height, nrChannels;
+    unsigned char *data = stbi_load("container.jpg", &width, &height, &nrChannels, 0);
+    if(data){
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }else{
+        std::cout << "Fail to load image!\n";
+    }
+    stbi_image_free(data);
 
     while(!glfwWindowShouldClose(window)){
         glClearColor(0.2, 0.3, 0.3, 1.0);

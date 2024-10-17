@@ -9,6 +9,7 @@
                 "-g",
                 "${file}",
                 "shader.cpp",
+                "stb_image.cpp",
                 "glad.o",
                 "-o",
                 "${fileDirname}\\${fileBasenameNoExtension}.exe",
