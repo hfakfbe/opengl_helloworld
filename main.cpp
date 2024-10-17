@@ -2,6 +2,9 @@
 #include "GLFW/glfw3.h"
 #include "shader.h"
 #include "stb_image.h"
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 #include <iostream>
 #include <cmath>
@@ -101,6 +104,7 @@ int main()
     }
     stbi_image_free(data);
 
+
     while(!glfwWindowShouldClose(window)){
         glClearColor(0.2, 0.3, 0.3, 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -109,8 +113,13 @@ int main()
 
         float timeValue = glfwGetTime();
         float Value = std::sin(timeValue) / 2.0f + 0.5f;
-        int vertexColorLocation = glGetUniformLocation(ourShader.ID, "ourColor");
+        unsigned int vertexColorLocation = glGetUniformLocation(ourShader.ID, "ourColor");
         glUniform4f(vertexColorLocation, Value, Value, Value, 1.0f);
+        // transform
+        glm::mat4 trans = glm::mat4(1.0f);
+        trans = glm::rotate(trans, (float) glfwGetTime(), glm::vec3(0.0f, 1.0f, 1.0f));
+        unsigned int transformLoc = glGetUniformLocation(ourShader.ID, "transform");
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
 
         glBindVertexArray(VAO);
         
