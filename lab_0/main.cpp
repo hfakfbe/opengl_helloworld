@@ -48,7 +48,7 @@ int main()
     // data
     float vertices[] = {
     //  position            color               texture coordination
-        0.5f, 0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 0.0f,  // 右上角
+        0.5f, 0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   2.0f, 0.0f,  // 右上角
         0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   1.0f, 1.0f, // 右下角
         -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f,   0.0f, 1.0f, // 左下角
         -0.5f, 0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   0.0f, 0.0f, // 左上角
