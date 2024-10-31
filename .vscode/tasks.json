@@ -7,16 +7,15 @@
             "args": [
                 "-fdiagnostics-color=always",
                 "-g",
-                "${file}",
-                "shader.cpp",
-                "stb_image.cpp",
-                "glad.o",
+                "${fileDirname}/*.cpp",
+                "${workspaceFolder}/stb_image.cpp",
+                "${workspaceFolder}/glad.c",
                 "-o",
-                "${fileDirname}\\${fileBasenameNoExtension}.exe",
-                "-L\"${fileDirname}\"",
+                "${fileDirname}/${fileBasenameNoExtension}.exe",
+                "-L${workspaceFolder}/libs",
                 "-lglfw3",
                 "-lopengl32",
-                "-lgdi32"
+                "-lgdi32",
             ],
             "options": {
                 "cwd": "${fileDirname}"
