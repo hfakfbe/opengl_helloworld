@@ -6,7 +6,8 @@
             "command": "C:\\Program Files\\tdm-gcc\\bin\\g++.exe",
             "args": [
                 "-fdiagnostics-color=always",
-                "-g",
+                "-I${workspaceFolder}/include",
+                "-ggdb",
                 "${fileDirname}/*.cpp",
                 "${workspaceFolder}/stb_image.o",
                 "${workspaceFolder}/glad.o",
@@ -14,6 +15,7 @@
                 "${fileDirname}/${fileBasenameNoExtension}.exe",
                 "-L${workspaceFolder}/libs",
                 "-lglfw3",
+                "-lassimp",
                 "-lopengl32",
                 "-lgdi32",
             ],
