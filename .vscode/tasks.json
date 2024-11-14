@@ -9,6 +9,7 @@
                 "-I${workspaceFolder}/include",
                 "-ggdb",
                 "${fileDirname}/*.cpp",
+                "${workspaceFolder}/include/imgui/*.cpp",
                 "${workspaceFolder}/stb_image.o",
                 "${workspaceFolder}/glad.o",
                 "-o",

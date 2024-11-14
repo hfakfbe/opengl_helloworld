@@ -1,3 +1,4 @@
 *.exe
 *.o
 libs/lib*
+model/*
