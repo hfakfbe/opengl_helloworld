@@ -5,6 +5,7 @@
             "label": "C/C++: g++.exe build active file",
             "command": "C:\\Program Files\\tdm-gcc\\bin\\g++.exe",
             "args": [
+                "-O3",
                 "-fdiagnostics-color=always",
                 "-I${workspaceFolder}/include",
                 "-ggdb",

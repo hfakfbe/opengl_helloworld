@@ -11,10 +11,22 @@
 
 #include <iostream>
 #include <vector>
+#include <mutex>
+#include <thread>
+#include <functional>
 
-int SCR_WIDTH = 1200, SCR_HEIGHT = 900;
+int SCR_WIDTH = 1200, SCR_HEIGHT = 800;
 std::vector<unsigned char> pixelBuffer;
 unsigned int VAO, VBO, texture;
+
+Sphere redSphere({-1.0f, -1.0f, -4.0f}, 1.0f, {1.0f, 0.0f, 0.0f}, 0.2f);
+Sphere blueSphere({1.0f, -1.0f, -4.0f}, 1.0f, {0.0f, 0.0f, 1.0f}, 0.2f);
+
+Wall floors({0.0f, -2.0f, -3.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, 20.0f, 20.0f, {0.5f, 0.3f, 0.1f}, 0.1f);
+Wall leftWall({-2.0f, 0.0f, -3.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, 20.0f, 20.0f, {1.0f, 1.0f, 1.0f}, 0.01f);
+Wall backWall({0.0f, 0.0f, -5.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f, 0.0f}, 20.0f, 20.0f, {1.0f, 1.0f, 1.0f}, 0.01f);
+
+std::vector<Object*> objects = {&redSphere, &blueSphere, &floors, &leftWall, &backWall};
 
 glm::vec3 trace(const Ray& ray, const std::vector<Object*>& objects, const Light& light, int depth) {
     if (depth > 3) return glm::vec3(0.0f); // 终止条件
@@ -81,30 +93,22 @@ glm::vec3 trace(const Ray& ray, const std::vector<Object*>& objects, const Light
     return diffuse + specular + reflectionColor * hitObject->reflectivity;
 }
 
-void renderScene(std::vector<unsigned char>& pixelBuffer, int width, int height, const Camera& camera, const Light& light) {
+// 渲染单行的函数
+void renderRow(int startY, int endY, int width, int height, const Camera& camera, const Light& light) {
     float aspectRatio = float(width) / float(height);
     float scale = glm::tan(glm::radians(camera.fov * 0.5f));
 
-    // 基于 camera.direction 和 camera.angle 计算前方向、右方向和上方向
+    // 计算前方向、右方向、上方向
     glm::vec3 forward = glm::normalize(camera.direction);
     glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
     glm::vec3 up = glm::normalize(glm::cross(right, forward));
 
-    // 应用旋转，调整上、右方向
     glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(camera.angle), forward);
     right = glm::vec3(rotation * glm::vec4(right, 1.0f));
     up = glm::vec3(rotation * glm::vec4(up, 1.0f));
 
-    Sphere redSphere({-1.0f, -1.0f, -4.0f}, 1.0f, {1.0f, 0.0f, 0.0f}, 0.2f);
-    Sphere blueSphere({1.0f, -1.0f, -4.0f}, 1.0f, {0.0f, 0.0f, 1.0f}, 0.2f);
-   
-    Wall floor({0.0f, -2.0f, -3.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, 20.0f, 20.0f, {0.5f, 0.3f, 0.1f}, 0.1f);
-    Wall leftWall({-2.0f, 0.0f, -3.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, 20.0f, 20.0f, {1.0f, 1.0f, 1.0f}, 0.01f);
-    Wall backWall({0.0f, 0.0f, -5.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f, 0.0f}, 20.0f, 20.0f, {1.0f, 1.0f, 1.0f}, 0.01f);
-
-    std::vector<Object*> objects = {&redSphere, &blueSphere, &floor, &leftWall, &backWall};
-
-    for (int y = 0; y < height; ++y) {
+    // 渲染每一行
+    for (int y = startY; y < endY; ++y) {
         for (int x = 0; x < width; ++x) {
             float px = (2 * (x + 0.5f) / float(width) - 1) * aspectRatio * scale;
             float py = (2 * (y + 0.5f) / float(height) - 1) * scale;
@@ -114,12 +118,36 @@ void renderScene(std::vector<unsigned char>& pixelBuffer, int width, int height,
 
             glm::vec3 color = trace(ray, objects, light, 0);
 
+            // 计算像素索引并保护对 pixelBuffer 的写操作
             int index = (y * width + x) * 3;
-            pixelBuffer[index] = static_cast<unsigned char>(glm::clamp(color.r, 0.0f, 1.0f) * 255);
-            pixelBuffer[index + 1] = static_cast<unsigned char>(glm::clamp(color.g, 0.0f, 1.0f) * 255);
-            pixelBuffer[index + 2] = static_cast<unsigned char>(glm::clamp(color.b, 0.0f, 1.0f) * 255);
-            // std::cout << "(" << index / 3 << "," << int(pixelBuffer[index]) << "," << int(pixelBuffer[index + 1]) << "," << int(pixelBuffer[index + 2]) << ")" << std::endl;
+            {
+                // std::lock_guard<std::mutex> lock(bufferMutex);
+                pixelBuffer[index] = static_cast<unsigned char>(glm::clamp(color.r, 0.0f, 1.0f) * 255);
+                pixelBuffer[index + 1] = static_cast<unsigned char>(glm::clamp(color.g, 0.0f, 1.0f) * 255);
+                pixelBuffer[index + 2] = static_cast<unsigned char>(glm::clamp(color.b, 0.0f, 1.0f) * 255);
+            }
         }
+    }
+}
+
+// 多线程渲染函数
+void renderScene(std::vector<unsigned char>& pixelBuffer, int width, int height, const Camera& camera, const Light& light) {
+    int numThreads = std::thread::hardware_concurrency();
+    int rowsPerThread = height / numThreads;
+
+    std::vector<std::thread> threads;
+    // std::mutex bufferMutex;
+
+    for (int i = 0; i < numThreads; ++i) {
+        int startY = i * rowsPerThread;
+        int endY = (i == numThreads - 1) ? height : startY + rowsPerThread;
+
+        threads.emplace_back(renderRow, startY, endY, width, height, std::ref(camera), std::ref(light));
+    }
+
+    // 等待所有线程完成
+    for (auto& thread : threads) {
+        thread.join();
     }
 }
 
@@ -191,13 +219,13 @@ bool makeImGui(Light& light, Camera& camera) {
     ImGui::SliderFloat("Camera Angle", &camera.angle, -180.0f, 180.0f);         // 角度调整
     ImGui::SliderFloat("FOV", &camera.fov, 10.0f, 120.0f);
 
-    bool startRender = false;
-    if (ImGui::Button("Start")) {
-        startRender = true;
-    }
+    // bool startRender = false;
+    // if (ImGui::Button("Start")) {
+    //     startRender = true;
+    // }
     ImGui::End();
 
-    return startRender;
+    return true; // startRender;
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
